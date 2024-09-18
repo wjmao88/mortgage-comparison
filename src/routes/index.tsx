@@ -1,3 +1,4 @@
+import { useSearchParams } from "@solidjs/router";
 import { Accessor, createEffect, createMemo, For } from "solid-js";
 import { createStore } from "solid-js/store";
 import { CustomPartial } from "solid-js/store/types/store.js";
@@ -8,6 +9,7 @@ import {
   Mortgage,
   MortgageBase,
 } from "~/lib/mortgage";
+import { encodeData, decodeData } from "~/lib/paramCodec";
 
 export const route = {};
 
@@ -20,9 +22,15 @@ const BASE_MORTGAGE_DEFAULT: MortgageBase = {
 };
 
 export default function App() {
-  const [mortgageBases, setMortgageBases] = createStore<MortgageBase[]>([
-    BASE_MORTGAGE_DEFAULT,
-  ]);
+  const [searchParams, setSearchParams] = useSearchParams<{ data: string }>();
+
+  const [mortgageBases, setMortgageBases] = createStore<MortgageBase[]>(
+    decodeData<MortgageBase[]>(searchParams.data) || [BASE_MORTGAGE_DEFAULT]
+  );
+
+  createEffect(() => {
+    setSearchParams({ data: encodeData(mortgageBases) });
+  });
 
   const addNew = () =>
     setMortgageBases(mortgageBases.length, { ...mortgageBases[0] });
@@ -69,11 +77,6 @@ export default function App() {
       calcTable(m, highestPrincipal(), highestMonthly(), highestPeriod())
     );
   });
-
-  createEffect(() => {
-    console.log(tables());
-  });
-  console.log(tables());
 
   return (
     <section>

@@ -33,7 +33,8 @@ export const calcMonthlyPayment = (m: MortgageBase) => {
 export const calcTable = (
   m: Mortgage,
   maxPrincipal: number,
-  maxPayment: number
+  maxPayment: number,
+  maxPeriod: number
 ): MortgageTableRow[] => {
   const investment = maxPayment - m.monthlyPayment;
   const initialCondition: MortgageTableRow = {
@@ -48,7 +49,7 @@ export const calcTable = (
     balance: maxPrincipal - m.principal - m.principal,
   };
 
-  return new Array(m.months).fill(0).reduce((all, _, index) => {
+  return new Array(maxPeriod).fill(0).reduce((all, _, index) => {
     all.push(
       calcTableRow(
         index,

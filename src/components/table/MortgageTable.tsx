@@ -1,7 +1,21 @@
-import { Accessor, Component, For } from "solid-js";
+import { Accessor, Component, For, ParentComponent } from "solid-js";
 import { CustomPartial } from "solid-js/store/types/store.js";
 import { Mortgage, MortgageTableRow } from "~/lib/mortgage";
 import MortgageEdit from "./MortgageEdit";
+
+const TD: ParentComponent<{ class?: string; section?: boolean }> = ({
+  children,
+  section,
+  ...props
+}) => (
+  <td
+    class={`px-1 text-right ${
+      section ? "border-l border-neutral-300 border-solid" : ""
+    } ${props.class}`}
+  >
+    {children}
+  </td>
+);
 
 const MortgageTable: Component<{
   mortgage: Mortgage;
@@ -9,7 +23,15 @@ const MortgageTable: Component<{
   highestPrincipal: Accessor<number>;
   highestMonthly: Accessor<number>;
   table: Accessor<MortgageTableRow[]>;
-}> = ({ mortgage, onChange, highestPrincipal, highestMonthly, table }) => {
+  baseTable: Accessor<MortgageTableRow[]>;
+}> = ({
+  mortgage,
+  onChange,
+  highestPrincipal,
+  highestMonthly,
+  table,
+  baseTable,
+}) => {
   return (
     <div class="rounded border border-neutral-300 border-solid p-2">
       <MortgageEdit mortgage={mortgage} onChange={onChange} />
@@ -36,28 +58,41 @@ const MortgageTable: Component<{
             <th>interest</th>
             <th>principal</th>
             <th>remaining</th>
-            <th>total paid</th>
             <th>interest</th>
             <th>new</th>
             <th>total</th>
             <th>balance</th>
+            <th>diff</th>
           </tr>
         </thead>
         <tbody>
           <For each={table()}>
-            {(row) => (
-              <tr>
-                <td>{row.period}</td>
-                <td>${row.interestPayment.toFixed(2)}</td>
-                <td>${row.principalPayment.toFixed(2)}</td>
-                <td>${row.principalLeft.toFixed(2)}</td>
-                <td>${row.totalPaid.toFixed(2)}</td>
-                <td>${row.investmentInterest.toFixed(2)}</td>
-                <td>${row.newInvestment.toFixed(2)}</td>
-                <td>${row.investmentTotal.toFixed(2)}</td>
-                <td>${row.balance.toFixed(2)}</td>
-              </tr>
-            )}
+            {(row, index) => {
+              const compareBalance = row.balance - baseTable()[index()].balance;
+              return (
+                <tr>
+                  <TD>{row.period}</TD>
+                  <TD section>${row.interestPayment.toFixed(2)}</TD>
+                  <TD>${row.principalPayment.toFixed(2)}</TD>
+                  <TD>${row.principalLeft.toFixed(2)}</TD>
+                  <TD section>${row.investmentInterest.toFixed(2)}</TD>
+                  <TD>${row.newInvestment.toFixed(2)}</TD>
+                  <TD>${row.investmentTotal.toFixed(2)}</TD>
+                  <TD section>${row.balance.toFixed(2)}</TD>
+                  <TD
+                    class={
+                      compareBalance > 0
+                        ? "bg-green-300"
+                        : compareBalance < 0
+                        ? "bg-red-300"
+                        : ""
+                    }
+                  >
+                    {compareBalance !== 0 && ` $${compareBalance.toFixed(2)}`}
+                  </TD>
+                </tr>
+              );
+            }}
           </For>
         </tbody>
       </table>

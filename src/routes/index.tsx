@@ -40,17 +40,21 @@ export default function App() {
     return Math.max(...mortgageBases.map((m) => m.principal));
   });
 
-  const monthly = createMemo(() =>
+  const monthlies = createMemo(() =>
     mortgageBases.map((m) => calcMonthlyPayment(m) + m.extraMonthlyPayment)
   );
 
   const highestMonthly = createMemo(() => {
-    return Math.max(...monthly());
+    return Math.max(...monthlies());
   });
+
+  const highestPeriod = createMemo(() =>
+    Math.max(...mortgageBases.map((m) => m.months))
+  );
 
   const mortgages = createMemo(() => {
     return mortgageBases.map<Mortgage>((m, index) => {
-      const monthlyPayment = monthly()[index];
+      const monthlyPayment = monthlies()[index];
       return {
         ...m,
         monthlyPayment,
@@ -62,7 +66,7 @@ export default function App() {
 
   const tables = createMemo(() => {
     return mortgages().map((m) =>
-      calcTable(m, highestPrincipal(), highestMonthly())
+      calcTable(m, highestPrincipal(), highestMonthly(), highestPeriod())
     );
   });
 
@@ -92,6 +96,7 @@ export default function App() {
                 highestPrincipal={highestPrincipal}
                 highestMonthly={highestMonthly}
                 table={() => tables()[index()]}
+                baseTable={() => tables()[0]}
               />
             </div>
           )}
